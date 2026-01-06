@@ -433,14 +433,244 @@ textarea#input-text::placeholder {
     background: linear-gradient(180deg, #0052cc, #00a8e0);
 }
 
-@media (max-width: 900px) {
+/* ========== 平板适配 ========== */
+@media (max-width: 1024px) {
+    .input-section {
+        min-width: 360px;
+        max-width: 400px;
+    }
+    
+    .handwriting-preview {
+        min-width: 350px;
+        width: 350px;
+        height: 495px;
+    }
+}
+
+/* ========== 手机端适配 ========== */
+@media (max-width: 768px) {
+    .app-container {
+        padding: 12px;
+    }
+    
+    .app-header {
+        margin-bottom: 16px;
+    }
+    
+    .app-header h1 {
+        font-size: 1.6em;
+    }
+    
+    .app-header p {
+        font-size: 13px;
+    }
+    
     .app-main {
         flex-direction: column;
+        gap: 16px;
     }
     
     .input-section {
         max-width: 100%;
         min-width: auto;
+        width: 100%;
+        position: static; /* 取消 sticky */
+        max-height: none;
+        padding: 16px;
+    }
+    
+    .output-section {
+        padding: 16px;
+    }
+    
+    .input-section h2,
+    .output-section h2 {
+        font-size: 1em;
+        margin-bottom: 12px;
+    }
+    
+    textarea#input-text {
+        min-height: 120px;
+        font-size: 14px;
+    }
+    
+    .layout-options {
+        margin-top: 10px;
+    }
+    
+    .layout-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .layout-row label {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+    
+    .layout-row input[type="number"],
+    .layout-row input[type="text"],
+    .layout-row select {
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+    
+    .layout-row span {
+        width: 100%;
+        margin-top: 2px;
+        font-size: 11px !important;
+    }
+    
+    #convert-button,
+    #export-edited-pdf-button {
+        width: 100%;
+        padding: 14px 20px;
+        font-size: 15px;
+    }
+    
+    .download-btn-group {
+        flex-direction: column;
+        border-radius: 10px;
+    }
+    
+    .download-btn-group button {
+        padding: 14px 16px;
+        font-size: 14px;
+    }
+    
+    .download-btn-group #download-image-button {
+        border-right: none;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+        border-radius: 10px 10px 0 0;
+    }
+    
+    .download-btn-group #download-pdf-button {
+        border-radius: 0 0 10px 10px;
+    }
+    
+    /* 模式切换按钮 */
+    .mode-switch {
+        gap: 8px;
+        margin-top: 12px;
+    }
+    
+    .mode-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+    
+    /* 预览区域 */
+    .preview-container {
+        padding: 12px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch; /* iOS 顺滑滚动 */
+    }
+    
+    .handwriting-preview {
+        min-width: 300px;
+        width: 300px;
+        height: 424px;
+        padding: 16px;
+        font-size: 12px;
+    }
+    
+    /* PDF编辑模式 */
+    .pdf-toolbar {
+        gap: 6px;
+        margin-bottom: 10px;
+    }
+    
+    .pdf-tool-btn {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+    
+    #pdf-page-info {
+        font-size: 12px;
+        margin: 0 4px;
+    }
+    
+    #pdf-canvas-wrapper {
+        max-width: 100%;
+        overflow: auto;
+    }
+    
+    .pdf-tip {
+        font-size: 11px;
+        padding: 0 8px;
+    }
+    
+    /* 区域列表面板 */
+    .regions-panel {
+        padding: 10px;
+        min-height: 120px;
+        max-height: 200px;
+    }
+    
+    .region-input-item {
+        gap: 6px;
+    }
+    
+    .region-input-item input {
+        font-size: 14px;
+        padding: 10px;
+    }
+    
+    /* Toast 弹窗 */
+    .toast {
+        padding: 12px 20px;
+        font-size: 13px;
+        max-width: 90%;
+    }
+    
+    /* 框选区域文本 */
+    .region-text {
+        font-size: 12px;
+    }
+}
+
+/* ========== 小屏手机适配 ========== */
+@media (max-width: 480px) {
+    .app-container {
+        padding: 10px;
+    }
+    
+    .app-header h1 {
+        font-size: 1.4em;
+    }
+    
+    .input-section,
+    .output-section {
+        padding: 14px;
+        border-radius: 12px;
+    }
+    
+    .mode-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+    
+    .handwriting-preview {
+        min-width: 260px;
+        width: 260px;
+        height: 368px;
+        padding: 12px;
+    }
+    
+    .pdf-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .pdf-tool-btn {
+        width: 100%;
+        text-align: center;
+    }
+    
+    #pdf-page-info {
+        text-align: center;
+        margin: 4px 0;
     }
 }
 
