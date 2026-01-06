@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <title>手写体文本生成器</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+    <!-- 小弹窗提示 -->
+    <div id="toast" class="toast"></div>
+    
+    <div class="app-container">
+        <header class="app-header">
+            <h1>手写体文本生成器</h1>
+            <p>输入要抄写的内容，自动生成“手写体”效果文本。</p>
+            <div class="mode-switch">
+                <button id="mode-text-btn" class="mode-btn active">文本转手写</button>
+                <button id="mode-pdf-btn" class="mode-btn">导入PDF编辑</button>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <section class="input-section">
+                <h2>输入内容</h2>
+                <textarea id="input-text" placeholder="在这里粘贴或输入你要抄写的文本..."></textarea>
+                
+                <!-- PDF编辑模式的区域列表 (放在textarea位置) -->
+                <div id="regions-panel" class="regions-panel" style="display: none;">
+                    <div id="regions-list"></div>
+                    <div id="regions-empty" style="color: #888; font-size: 13px; text-align: center; padding: 20px;">
+                        📌 暂无框选区域<br>
+                        <span style="font-size: 12px; color: #666;">请在右侧PDF上拖动鼠标框选要填写的区域</span>
+                    </div>
+                </div>
+                
+                <div class="layout-options">
+                    <div class="layout-row">
+                        <label>字体选择：
+                            <select id="font-selector">
+                                <option value="">加载中...</option>
+                            </select>
+                        </label>
+                        <label>字体粗细：
+                            <select id="font-weight">
+                                <option value="300">细</option>
+                                <option value="400" selected>正常</option>
+                                <option value="500">中等</option>
+                                <option value="600">粗</option>
+                                <option value="700">加粗</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="layout-row">
+                        <label>每行字数：
+                            <input id="chars-per-line" type="number" min="5" max="100" value="26" />
+                            <span style="font-size: 12px; color: #666;">（推荐: 20-30字）</span>
+                        </label>
+                        <label>每页行数：
+                            <input id="lines-per-page" type="number" min="5" max="50" value="20" />
+                            <span style="font-size: 12px; color: #666;">（推荐: 15-25行）</span>
+                        </label>
+                    </div>
+                    <div class="layout-row">
+                        <label>字体大小：
+                            <select id="font-size-mode">
+                                <option value="small">小 (60pt)</option>
+                                <option value="medium" selected>中 (80pt)</option>
+                                <option value="large">大 (100pt)</option>
+                            </select>
+                        </label>
+                        <label>手写错误：
+                            <select id="enable-errors">
+                                <option value="false" selected>关闭（完美抄写）</option>
+                                <option value="true">开启（模拟真实手写）</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="layout-row">
+                        <label>抖动强度：
+                            <input id="jitter-level" type="number" min="0" max="10" value="6" style="width: 60px;" />
+                            <span style="font-size: 12px; color: #666;">0=无抖动，1-3=轻微，4-6=中等，7-10=明显</span>
+                        </label>
+                    </div>
+                </div>
+                <button id="convert-button">转换为手写体文本</button>
+                <div class="download-btn-group">
+                    <button id="download-image-button">🖼️ 生成A4图片下载</button>
+                    <button id="download-pdf-button">📄 生成PDF下载</button>
+                </div>
+                
+                <!-- PDF编辑模式的导出按钮 -->
+                <button id="export-edited-pdf-button" style="display: none;">导出编辑后的PDF</button>
+            </section>
+
+            <section class="output-section">
+                <h2>预览（A4纸张比例）</h2>
+                <!-- 文本模式预览 -->
+                <div id="text-preview-container" class="preview-container">
+                    <div id="output" class="handwriting-preview"></div>
+                </div>
+                <!-- PDF编辑模式预览 -->
+                <div id="pdf-preview-container" class="preview-container" style="display: none;">
+                    <div class="pdf-toolbar">
+                        <input type="file" id="pdf-file-input" accept=".pdf" style="display: none;" />
+                        <button id="upload-pdf-btn" class="pdf-tool-btn">📁 选择PDF文件</button>
+                        <button id="clear-regions-btn" class="pdf-tool-btn">🗑️ 清除所有框选</button>
+                        <span id="pdf-page-info"></span>
+                        <button id="pdf-prev-page" class="pdf-tool-btn" disabled>← 上一页</button>
+                        <button id="pdf-next-page" class="pdf-tool-btn" disabled>下一页 →</button>
+                    </div>
+                    <div id="pdf-canvas-wrapper">
+                        <canvas id="pdf-canvas"></canvas>
+                        <div id="pdf-overlay"></div>
+                    </div>
+                    <div class="pdf-tip">提示：在PDF上拖动鼠标框选要填写的区域，点击框选区域可直接编辑</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- PDF.js 库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- html2canvas 用于截图导出 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/pdf-editor.js"></script>
+</body>
+</html>

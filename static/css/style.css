@@ -1,0 +1,820 @@
+@font-face {
+    font-family: "LXGW WenKai";
+    src: url("/static/fonts/LXGWWenKai-Regular.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Dymon";
+    src: url("/static/fonts/Dymon-ShouXieTi.otf") format("opentype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "XieYiTi";
+    src: url("/static/fonts/写意体.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "XieYiTiSC";
+    src: url("/static/fonts/写意体sc.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "PingFang";
+    src: url("/static/fonts/平方时光体.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "HongLei";
+    src: url("/static/fonts/鸿雷小纸条青春体.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "JianJian";
+    src: url("/static/fonts/坚坚体.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "ShangShangQian";
+    src: url("/static/fonts/平方上上谦体.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+    min-height: 100vh;
+    color: #333;
+}
+
+.app-container {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.app-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.app-header h1 {
+    margin: 0 0 8px;
+    font-size: 2.2em;
+    background: linear-gradient(90deg, #0066ff, #00c8ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.app-header p {
+    color: #666;
+    font-size: 14px;
+}
+
+.app-main {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.input-section {
+    background: #fff;
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px solid #e0e5ec;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    min-width: 420px;
+    max-width: 520px;
+    flex-shrink: 0;
+    /* 滚动时保持可见 */
+    position: sticky;
+    top: 20px;
+    align-self: flex-start;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+}
+
+.output-section {
+    background: #fff;
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px solid #e0e5ec;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.input-section h2,
+.output-section h2 {
+    margin: 0 0 16px 0;
+    font-size: 1.1em;
+    color: #0066ff;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.input-section h2::before {
+    content: "✍";
+}
+
+.output-section h2::before {
+    content: "📸";
+}
+
+.preview-container {
+    flex: 1;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    background: #f8f9fb;
+    padding: 16px;
+    border-radius: 12px;
+    gap: 20px;
+    border: 1px solid #e8ecf0;
+}
+
+textarea#input-text {
+    width: 100%;
+    min-height: 180px;
+    resize: vertical;
+    padding: 12px;
+    font-size: 14px;
+    background: #f8f9fb;
+    border: 1px solid #dde2e8;
+    border-radius: 10px;
+    color: #333;
+    transition: all 0.3s ease;
+}
+
+textarea#input-text:focus {
+    outline: none;
+    border-color: #0066ff;
+    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+}
+
+textarea#input-text::placeholder {
+    color: #999;
+}
+
+.layout-options {
+    margin-top: 12px;
+    font-size: 13px;
+    color: #666;
+}
+
+.layout-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    margin-top: 8px;
+}
+
+.layout-row label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #555;
+}
+
+.layout-row input[type="number"],
+.layout-row input[type="text"],
+.layout-row select {
+    padding: 6px 10px;
+    font-size: 13px;
+    width: 130px;
+    background: #fff;
+    border: 1px solid #dde2e8;
+    border-radius: 6px;
+    color: #333;
+    transition: all 0.3s ease;
+}
+
+.layout-row input[type="number"]:focus,
+.layout-row input[type="text"]:focus,
+.layout-row select:focus {
+    outline: none;
+    border-color: #0066ff;
+    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+}
+
+.layout-row select option {
+    background: #fff;
+    color: #333;
+}
+
+.layout-row span {
+    color: #888 !important;
+}
+
+#convert-button,
+#export-edited-pdf-button {
+    margin-top: 12px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+/* 下载按钮组 */
+.download-btn-group {
+    display: flex;
+    margin-top: 12px;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.download-btn-group button {
+    flex: 1;
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.download-btn-group #download-image-button {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    border-radius: 0;
+    border-right: 1px solid rgba(255,255,255,0.2);
+}
+
+.download-btn-group #download-pdf-button {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff;
+    border-radius: 0;
+}
+
+.download-btn-group button:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+#convert-button {
+    background: linear-gradient(135deg, #0066ff, #0052cc);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 102, 255, 0.25);
+}
+
+#convert-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 102, 255, 0.35);
+}
+
+#export-edited-pdf-button {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
+}
+
+#export-edited-pdf-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(139, 92, 246, 0.35);
+}
+
+#convert-button:active,
+#export-edited-pdf-button:active,
+.download-btn-group button:active {
+    transform: translateY(0);
+}
+
+.handwriting-preview {
+    min-width: 420px;
+    width: 420px;
+    height: 594px;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    font-family: "PingFang", "LXGW WenKai", "Comic Sans MS", "KaiTi", cursive;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow: hidden;
+    font-weight: 400;
+    flex-shrink: 0;
+    position: relative;
+    text-align: left;
+    color: #1a1a1a;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #e8ecf0;
+}
+
+.handwriting-preview:hover {
+    transform: scale(1.01);
+    box-shadow: 0 8px 24px rgba(0, 102, 255, 0.12);
+}
+
+/* 页码标记 */
+.handwriting-preview::after {
+    content: attr(data-page-num);
+    position: absolute;
+    bottom: 8px;
+    right: 12px;
+    font-size: 11px;
+    color: #999;
+    font-family: -apple-system, sans-serif;
+}
+
+/* 小弹窗提示 */
+.toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    color: #333;
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-size: 14px;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e0e5ec;
+    max-width: 80%;
+    text-align: center;
+}
+
+.toast.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+.toast.success {
+    background: #ecfdf5;
+    color: #059669;
+    border-color: #a7f3d0;
+}
+
+.toast.error {
+    background: #fef2f2;
+    color: #dc2626;
+    border-color: #fecaca;
+}
+
+.toast.info {
+    background: #eff6ff;
+    color: #2563eb;
+    border-color: #bfdbfe;
+}
+
+/* 滚动条美化 */
+.preview-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.preview-container::-webkit-scrollbar-track {
+    background: #f0f2f5;
+    border-radius: 4px;
+}
+
+.preview-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, #0066ff, #00c8ff);
+    border-radius: 4px;
+}
+
+.preview-container::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(90deg, #0052cc, #00a8e0);
+}
+
+/* 左侧调参区域滚动条 */
+.input-section::-webkit-scrollbar {
+    width: 6px;
+}
+
+.input-section::-webkit-scrollbar-track {
+    background: #f0f2f5;
+    border-radius: 3px;
+}
+
+.input-section::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #0066ff, #00c8ff);
+    border-radius: 3px;
+}
+
+.input-section::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #0052cc, #00a8e0);
+}
+
+@media (max-width: 900px) {
+    .app-main {
+        flex-direction: column;
+    }
+    
+    .input-section {
+        max-width: 100%;
+        min-width: auto;
+    }
+}
+
+/* 模式切换按钮 */
+.mode-switch {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.mode-btn {
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    border: 2px solid #dde2e8;
+    border-radius: 25px;
+    background: transparent;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.mode-btn:hover {
+    border-color: #0066ff;
+    color: #0066ff;
+}
+
+.mode-btn.active {
+    background: linear-gradient(135deg, #0066ff, #0052cc);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 102, 255, 0.25);
+}
+
+/* PDF编辑模式 */
+#pdf-preview-container {
+    flex-direction: column;
+    align-items: center;
+}
+
+.pdf-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.pdf-tool-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+    border: 1px solid #dde2e8;
+    border-radius: 8px;
+    background: #fff;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.pdf-tool-btn:hover:not(:disabled) {
+    background: #f0f7ff;
+    border-color: #0066ff;
+    color: #0066ff;
+}
+
+.pdf-tool-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+#pdf-page-info {
+    color: #666;
+    font-size: 13px;
+    margin: 0 8px;
+}
+
+#pdf-canvas-wrapper {
+    position: relative;
+    display: inline-block;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+#pdf-canvas {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+#pdf-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    cursor: crosshair;
+}
+
+.pdf-tip {
+    margin-top: 12px;
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+}
+
+/* 框选区域 */
+.selection-region {
+    position: absolute;
+    border: 2px dashed #0066ff;
+    background: rgba(0, 102, 255, 0.05);
+    cursor: move;
+    transition: background 0.2s ease;
+}
+
+.selection-region:hover {
+    background: rgba(0, 102, 255, 0.1);
+    border-style: solid;
+}
+
+.selection-region.active {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.08);
+}
+
+.region-number {
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, #0066ff, #0052cc);
+    color: #fff;
+    font-size: 11px;
+    font-weight: bold;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    pointer-events: none;
+}
+
+/* 拖动中的状态 */
+.selection-region.dragging {
+    border-color: #0066ff;
+    box-shadow: 0 0 12px rgba(0, 102, 255, 0.3);
+    opacity: 0.9;
+    cursor: move;
+}
+
+.selection-region.dragging .region-text {
+    cursor: move;
+}
+
+.region-delete {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 20px;
+    height: 20px;
+    background: #ff4757;
+    color: #fff;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    pointer-events: auto;
+}
+
+.selection-region:hover .region-delete {
+    opacity: 1;
+}
+
+.region-delete:hover {
+    background: #ff6b7a;
+    transform: scale(1.1);
+}
+
+/* 调整大小的手柄 */
+.resize-handle {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: linear-gradient(135deg, #0066ff, #00c8ff);
+    border: 2px solid #fff;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 50;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.selection-region:hover .resize-handle,
+.selection-region.resizing .resize-handle {
+    opacity: 1;
+}
+
+.resize-handle:hover {
+    transform: scale(1.2);
+}
+
+/* 四个角的位置 */
+.resize-nw {
+    top: -6px;
+    left: -6px;
+    cursor: nwse-resize;
+}
+
+.resize-ne {
+    top: -6px;
+    right: -6px;
+    cursor: nesw-resize;
+}
+
+.resize-sw {
+    bottom: -6px;
+    left: -6px;
+    cursor: nesw-resize;
+}
+
+.resize-se {
+    bottom: -6px;
+    right: -6px;
+    cursor: nwse-resize;
+}
+
+/* 调整中的状态 */
+.selection-region.resizing {
+    border-color: #10b981;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+.selection-region.resizing .resize-handle {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+/* 抖动效果提示图标 */
+.jitter-hint {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    font-size: 12px;
+    opacity: 0.6;
+    pointer-events: none;
+    z-index: 10;
+    text-shadow: 0 0 2px rgba(255,255,255,0.8);
+}
+
+/* 框选区域内的文本 */
+.region-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 4px;
+    font-family: "PingFang", "LXGW WenKai", cursive;
+    color: #1a1a1a;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    outline: none;
+    resize: none;
+    overflow: auto;  /* 支持滚动 */
+    word-wrap: break-word;
+    line-height: 1.4;
+    cursor: move;  /* 默认显示拖动光标 */
+    /* 隐藏滚动条但保留滚动功能 */
+    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;  /* IE/Edge */
+}
+
+/* 编辑模式下显示文本光标 */
+.selection-region.active .region-text {
+    cursor: text;
+}
+
+/* 隐藏滚动条 - Chrome/Safari */
+.region-text::-webkit-scrollbar {
+    display: none;
+}
+
+.region-text:focus {
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.region-text::placeholder {
+    color: #999;
+    font-size: 12px;
+}
+
+/* 左侧区域列表 */
+.regions-panel {
+    margin-top: 0;
+    padding: 12px;
+    background: #f8f9fb;
+    border-radius: 10px;
+    min-height: 180px;
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #e8ecf0;
+}
+
+.regions-panel-title {
+    font-size: 13px;
+    color: #0066ff;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.region-input-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.region-input-item .region-label {
+    min-width: 24px;
+    height: 24px;
+    background: linear-gradient(135deg, #0066ff, #0052cc);
+    color: #fff;
+    font-size: 12px;
+    font-weight: bold;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.region-input-item input {
+    flex: 1;
+    padding: 8px 10px;
+    font-size: 13px;
+    background: #fff;
+    border: 1px solid #dde2e8;
+    border-radius: 6px;
+    color: #333;
+}
+
+.region-input-item input:focus {
+    outline: none;
+    border-color: #0066ff;
+}
+
+.region-delete-btn {
+    width: 28px;
+    height: 28px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    color: #dc2626;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.region-delete-btn:hover {
+    background: #dc2626;
+    color: #fff;
+    border-color: #dc2626;
+}
