@@ -489,6 +489,7 @@ textarea#input-text::placeholder {
     
     .output-section {
         padding: 16px;
+        min-height: 450px; /* 确保预览区域有足够高度 */
     }
     
     .input-section h2,
@@ -568,19 +569,29 @@ textarea#input-text::placeholder {
         font-size: 13px;
     }
     
-    /* 预览区域 */
+    /* 预览区域 - 手机端优化 */
     .preview-container {
-        padding: 12px;
+        padding: 10px;
+        min-height: 380px;
         overflow-x: auto;
-        -webkit-overflow-scrolling: touch; /* iOS 顺滑滚动 */
+        overflow-y: visible;
+        -webkit-overflow-scrolling: touch;
+        justify-content: center; /* 居中显示 */
+        align-items: flex-start;
     }
     
+    /* A4预览卡片 - 按比例缩放 */
     .handwriting-preview {
-        min-width: 300px;
-        width: 300px;
-        height: 424px;
-        padding: 16px;
-        font-size: 12px;
+        /* 使用 calc 根据屏幕宽度计算，保持 A4 比例 (1:√2 ≈ 1:1.414) */
+        width: calc(100vw - 76px); /* 屏幕宽度减去边距 */
+        max-width: 320px; /* 最大宽度限制 */
+        min-width: 240px; /* 最小宽度 */
+        height: auto;
+        aspect-ratio: 210 / 297; /* A4 标准比例 */
+        padding: 14px;
+        font-size: 11px;
+        line-height: 1.6;
+        flex-shrink: 0;
     }
     
     /* PDF编辑模式 */
@@ -654,16 +665,28 @@ textarea#input-text::placeholder {
         border-radius: 12px;
     }
     
+    .output-section {
+        min-height: 400px;
+    }
+    
     .mode-btn {
         padding: 8px 12px;
         font-size: 12px;
     }
     
+    /* 小屏手机预览卡片 */
+    .preview-container {
+        padding: 8px;
+        min-height: 340px;
+    }
+    
     .handwriting-preview {
-        min-width: 260px;
-        width: 260px;
-        height: 368px;
+        width: calc(100vw - 66px);
+        max-width: 280px;
+        min-width: 200px;
         padding: 12px;
+        font-size: 10px;
+        line-height: 1.5;
     }
     
     .pdf-toolbar {
