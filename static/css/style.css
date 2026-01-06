@@ -1,6 +1,6 @@
 @font-face {
     font-family: "LXGW WenKai";
-    src: url("/static/fonts/LXGWWenKai-Regular.ttf") format("truetype");
+    src: url("../fonts/LXGWWenKai-Regular.ttf") format("truetype");
     font-weight: normal;
     font-style: normal;
     font-display: swap; /* 先显示备用字体，加载完成后切换 */
@@ -8,7 +8,7 @@
 
 @font-face {
     font-family: "Dymon";
-    src: url("/static/fonts/Dymon-ShouXieTi.otf") format("opentype");
+    src: url("../fonts/Dymon-ShouXieTi.otf") format("opentype");
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -16,7 +16,7 @@
 
 @font-face {
     font-family: "XieYiTi";
-    src: url("/static/fonts/写意体.ttf") format("truetype");
+    src: url("../fonts/写意体.ttf") format("truetype");
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -24,7 +24,7 @@
 
 @font-face {
     font-family: "XieYiTiSC";
-    src: url("/static/fonts/写意体sc.ttf") format("truetype");
+    src: url("../fonts/写意体sc.ttf") format("truetype");
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -32,7 +32,7 @@
 
 @font-face {
     font-family: "PingFang";
-    src: url("/static/fonts/平方时光体.ttf") format("truetype");
+    src: url("../fonts/平方时光体.ttf") format("truetype");
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -40,7 +40,7 @@
 
 @font-face {
     font-family: "HongLei";
-    src: url("/static/fonts/鸿雷小纸条青春体.ttf") format("truetype");
+    src: url("../fonts/鸿雷小纸条青春体.ttf") format("truetype");
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -48,7 +48,7 @@
 
 @font-face {
     font-family: "JianJian";
-    src: url("/static/fonts/坚坚体.ttf") format("truetype");
+    src: url("../fonts/坚坚体.ttf") format("truetype");
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -56,7 +56,7 @@
 
 @font-face {
     font-family: "ShangShangQian";
-    src: url("/static/fonts/平方上上谦体.ttf") format("truetype");
+    src: url("../fonts/平方上上谦体.ttf") format("truetype");
     font-weight: normal;
     font-style: normal;
     font-display: swap;

@@ -169,39 +169,37 @@ document.addEventListener("DOMContentLoaded", function () {
         }, duration);
     }
 
-    // 加载可用字体列表
+    // 加载可用字体列表（纯前端版本，不依赖后端API）
     let fontMap = {};  // 存储 key -> cssFamily 的映射
     
-    async function loadFonts() {
-        try {
-            const response = await fetch("/api/fonts");
-            if (!response.ok) {
-                throw new Error("加载字体列表失败");
+    // 字体配置（与后端 AVAILABLE_FONTS 保持一致）
+    const FONTS_CONFIG = [
+        { key: "lxgw", name: "霞鹜文楷", cssFamily: "LXGW WenKai" },
+        { key: "dymon", name: "呆萌手写体", cssFamily: "Dymon" },
+        { key: "xieyiti", name: "写意体", cssFamily: "XieYiTi" },
+        { key: "xieyitisc", name: "写意体SC", cssFamily: "XieYiTiSC" },
+        { key: "pingfang", name: "平方时光体", cssFamily: "PingFang" },
+        { key: "honglei", name: "鸿雷小纸条青春体", cssFamily: "HongLei" },
+        { key: "jianjian", name: "坚坚体", cssFamily: "JianJian" },
+        { key: "shangshangqian", name: "平方上上谦体", cssFamily: "ShangShangQian" },
+    ];
+    
+    function loadFonts() {
+        fontSelector.innerHTML = "";
+        
+        FONTS_CONFIG.forEach((font) => {
+            const option = document.createElement("option");
+            option.value = font.key;
+            option.textContent = font.name;
+            // 默认选择平方时光体
+            if (font.key === "pingfang") {
+                option.selected = true;
             }
-            const data = await response.json();
-            fontSelector.innerHTML = "";
+            fontSelector.appendChild(option);
             
-            data.fonts.forEach((font, index) => {
-                const option = document.createElement("option");
-                option.value = font.key;
-                option.textContent = font.name;
-                // 默认选择平方时光体
-                if (font.key === "pingfang") {
-                    option.selected = true;
-                }
-                fontSelector.appendChild(option);
-                
-                // 存储字体key到CSS font-family的映射
-                fontMap[font.key] = font.cssFamily;
-            });
-            
-            // 初始化预览区字体
-            // 只有在页面加载完成并且有内容时才更新字体
-            // setTimeout(() => updatePreviewFont(), 100);  // 延迟更新以确保DOM加载完成
-        } catch (error) {
-            console.error(error);
-            fontSelector.innerHTML = '<option value="lxgw">默认字体</option>';
-        }
+            // 存储字体key到CSS font-family的映射
+            fontMap[font.key] = font.cssFamily;
+        });
         
         // 初始化预览区字体
         setTimeout(() => {
@@ -210,7 +208,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 previewContainer.innerHTML = '<div class="handwriting-preview">请先输入内容</div>';
             }
             updatePreviewFont();
-        }, 100);  // 延迟更新以确保DOM加载完成
+        }, 100);
     }
     
     // 更新预览区字体
@@ -496,92 +494,32 @@ document.addEventListener("DOMContentLoaded", function () {
         // 显示开始生成的提示
         showToast("正在生成图片，请稍候...", "info", 30000);
 
-        const payload = { text };
-
-        if (fontSelector) {
-            payload.font = fontSelector.value || "lxgw";
-        }
-
-        if (fontWeightSelector) {
-            payload.font_weight = parseInt(fontWeightSelector.value, 10) || 400;
-        }
-
-        if (fontSizeModeSelector) {
-            payload.font_size_mode = fontSizeModeSelector.value || "auto";
-        }
-
-        if (charsPerLineInput) {
-            const value = parseInt(charsPerLineInput.value, 10);
-            if (Number.isFinite(value) && value > 0) {
-                payload.chars_per_line = value;
-            }
-        }
-
-        if (linesPerPageInput) {
-            const value = parseInt(linesPerPageInput.value, 10);
-            if (Number.isFinite(value) && value > 0) {
-                payload.lines_per_page = value;
-            }
-        }
-        
-        // 添加手写错误开关
-        const enableErrorsSelector = document.getElementById('enable-errors');
-        if (enableErrorsSelector) {
-            payload.enable_errors = enableErrorsSelector.value === 'true';
-        }
-        
-        // 添加抖动强度参数
-        const jitterLevelInput = document.getElementById('jitter-level');
-        if (jitterLevelInput) {
-            payload.jitter_level = parseInt(jitterLevelInput.value, 10) || 0;
-        }
-
         try {
-            const response = await fetch("/api/render-image", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
+            // 设置字体映射
+            FrontendRender.setFontMap(fontMap);
+            
+            // 生成图片
+            const blobs = await FrontendRender.generateImages(text, {
+                fontKey: fontSelector.value || 'pingfang',
+                fontWeight: parseInt(fontWeightSelector.value, 10) || 400,
+                charsPerLine: charsPerLine,
+                linesPerPage: linesPerPage,
+                fontSizeMode: fontSizeModeSelector.value || 'medium',
+                jitterLevel: parseInt(document.getElementById('jitter-level').value, 10) || 0
             });
-
-            if (!response.ok) {
-                // 尝试获取错误信息
-                const errorData = await response.json().catch(() => null);
-                const errorMsg = errorData?.error || "服务器错误，请稍后再试";
-                showToast(errorMsg, "error", 5000);
-                return;
-            }
-
-            const blob = await response.blob();
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-
-            let filename = "handwritten_page_1.png";
-            const disposition = response.headers.get("Content-Disposition");
-            if (disposition) {
-                const match = /filename="?([^";]+)"?/i.exec(disposition);
-                if (match && match[1]) {
-                    filename = decodeURIComponent(match[1]);
-                }
-            }
-
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(url);
-
+            
+            // 下载
+            await FrontendRender.downloadImages(blobs);
+            
             // 成功提示
-            if (filename.endsWith(".zip")) {
-                showToast("✅ 多页图片已打包下载！", "success", 3000);
+            if (blobs.length > 1) {
+                showToast("✅ 多页图片已下载！", "success", 3000);
             } else {
                 showToast("✅ 图片已下载成功！", "success", 3000);
             }
         } catch (error) {
             console.error(error);
-            showToast("❌ 图片生成失败，请稍后再试", "error", 5000);
+            showToast("❌ 图片生成失败：" + error.message, "error", 5000);
         }
     }
 
@@ -601,62 +539,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
         showToast("正在生成PDF，请稍候...", "info", 30000);
 
-        const payload = { text };
-
-        if (fontSelector) {
-            payload.font = fontSelector.value || "pingfang";
-        }
-        if (fontWeightSelector) {
-            payload.font_weight = parseInt(fontWeightSelector.value, 10) || 400;
-        }
-        if (fontSizeModeSelector) {
-            payload.font_size_mode = fontSizeModeSelector.value || "auto";
-        }
-        if (charsPerLineInput) {
-            payload.chars_per_line = parseInt(charsPerLineInput.value, 10) || 26;
-        }
-        if (linesPerPageInput) {
-            payload.lines_per_page = parseInt(linesPerPageInput.value, 10) || 20;
-        }
-        
-        const enableErrorsSelector = document.getElementById('enable-errors');
-        if (enableErrorsSelector) {
-            payload.enable_errors = enableErrorsSelector.value === 'true';
-        }
-        
-        const jitterLevelInput = document.getElementById('jitter-level');
-        if (jitterLevelInput) {
-            payload.jitter_level = parseInt(jitterLevelInput.value, 10) || 6;
-        }
-
         try {
-            const response = await fetch("/api/render-pdf", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
+            // 设置字体映射
+            FrontendRender.setFontMap(fontMap);
+            
+            // 生成 PDF
+            const pdfBlob = await FrontendRender.generatePDF(text, {
+                fontKey: fontSelector.value || 'pingfang',
+                fontWeight: parseInt(fontWeightSelector.value, 10) || 400,
+                charsPerLine: parseInt(charsPerLineInput.value, 10) || 26,
+                linesPerPage: parseInt(linesPerPageInput.value, 10) || 20,
+                fontSizeMode: fontSizeModeSelector.value || 'medium',
+                jitterLevel: parseInt(document.getElementById('jitter-level').value, 10) || 6
             });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => null);
-                const errorMsg = errorData?.error || "PDF生成失败";
-                showToast(errorMsg, "error", 5000);
-                return;
-            }
-
-            const blob = await response.blob();
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "handwritten_pages.pdf";
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(url);
+            
+            // 下载
+            FrontendRender.downloadPDF(pdfBlob);
 
             showToast("✅ PDF已下载成功！", "success", 3000);
         } catch (error) {
             console.error(error);
-            showToast("❌ PDF生成失败，请稍后再试", "error", 5000);
+            showToast("❌ PDF生成失败：" + error.message, "error", 5000);
         }
     }
 });
