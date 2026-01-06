@@ -10,6 +10,46 @@ document.addEventListener("DOMContentLoaded", function () {
     const fontSizeModeSelector = document.getElementById("font-size-mode");
     const toast = document.getElementById("toast");
     
+    // 字体加载状态
+    let fontsLoaded = false;
+    
+    // 检测字体加载状态
+    if (document.fonts && document.fonts.ready) {
+        // 显示加载提示
+        const previewContainer = document.querySelector(".preview-container");
+        if (previewContainer) {
+            previewContainer.innerHTML = '<div class="handwriting-preview" style="display:flex;align-items:center;justify-content:center;color:#999;">字体加载中...</div>';
+        }
+        
+        document.fonts.ready.then(function() {
+            fontsLoaded = true;
+            console.log("✓ 字体加载完成");
+            // 字体加载完成后更新预览
+            if (previewContainer) {
+                previewContainer.innerHTML = '<div class="handwriting-preview">请先输入内容</div>';
+            }
+            updatePreviewFont();
+        });
+        
+        // 超时处理，防止字体加载卡住
+        setTimeout(function() {
+            if (!fontsLoaded) {
+                fontsLoaded = true;
+                console.log("字体加载超时，使用备用字体");
+                if (previewContainer) {
+                    previewContainer.innerHTML = '<div class="handwriting-preview">请先输入内容</div>';
+                }
+                updatePreviewFont();
+            }
+        }, 5000);
+    } else {
+        // 不支持 document.fonts 的浏览器，延迟加载
+        setTimeout(function() {
+            fontsLoaded = true;
+            updatePreviewFont();
+        }, 2000);
+    }
+    
     // 模式切换
     const modeTextBtn = document.getElementById("mode-text-btn");
     const modePdfBtn = document.getElementById("mode-pdf-btn");
@@ -185,7 +225,23 @@ document.addEventListener("DOMContentLoaded", function () {
         const selectedFont = fontSelector.value;
         const cssFamily = fontMap[selectedFont] || "PingFang";
         const fontWeight = fontWeightSelector.value || "400";
-            
+        
+        // 主动加载字体（确保手机端能正确加载）
+        if (document.fonts && document.fonts.load) {
+            document.fonts.load(`${fontWeight} 16px "${cssFamily}"`).then(function() {
+                console.log(`字体 ${cssFamily} 加载成功`);
+                applyFontToPages(cssFamily, fontWeight);
+            }).catch(function(err) {
+                console.warn(`字体 ${cssFamily} 加载失败:`, err);
+                applyFontToPages(cssFamily, fontWeight);
+            });
+        } else {
+            applyFontToPages(cssFamily, fontWeight);
+        }
+    }
+    
+    // 应用字体到页面
+    function applyFontToPages(cssFamily, fontWeight) {
         // 获取所有预览页面（在函数执行时重新查询）
         const allPages = document.querySelectorAll(".handwriting-preview");
         console.log(`找到 ${allPages.length} 个预览页面`);
@@ -194,6 +250,15 @@ document.addEventListener("DOMContentLoaded", function () {
             if (page && page.style) {
                 page.style.fontFamily = `"${cssFamily}", "Comic Sans MS", "KaiTi", cursive`;
                 page.style.fontWeight = fontWeight;
+            }
+        });
+        
+        // 同时更新PDF编辑模式中的文本区域
+        const regionTexts = document.querySelectorAll(".region-text");
+        regionTexts.forEach(textarea => {
+            if (textarea && textarea.style) {
+                textarea.style.fontFamily = `"${cssFamily}", "Comic Sans MS", "KaiTi", cursive`;
+                textarea.style.fontWeight = fontWeight;
             }
         });
     }
