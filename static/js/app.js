@@ -97,8 +97,10 @@ document.addEventListener("DOMContentLoaded", function () {
             
             // 文本模式下恢复抖动默认值
             const jitterInput = document.getElementById('jitter-level');
+            const jitterValueSpan = document.getElementById('jitter-level-value');
             if (jitterInput) {
                 jitterInput.value = '6';
+                if (jitterValueSpan) jitterValueSpan.textContent = '6';
             }
         } else {
             // PDF编辑模式
@@ -117,8 +119,10 @@ document.addEventListener("DOMContentLoaded", function () {
             
             // PDF模式下设置抖动默认为0
             const jitterInput = document.getElementById('jitter-level');
+            const jitterValueSpan = document.getElementById('jitter-level-value');
             if (jitterInput) {
                 jitterInput.value = '0';
+                if (jitterValueSpan) jitterValueSpan.textContent = '0';
             }
             
             // 隐藏不相关的排版选项（每行字数、每页行数、手写错误）
@@ -268,8 +272,28 @@ document.addEventListener("DOMContentLoaded", function () {
     // 页面加载时自动加载字体列表
     loadFonts();
 
+    // 更新滑块进度条颜色
+    function updateSliderTrack(slider) {
+        const min = parseFloat(slider.min) || 0;
+        const max = parseFloat(slider.max) || 100;
+        const val = parseFloat(slider.value) || 0;
+        const percent = ((val - min) / (max - min)) * 100;
+        slider.style.background = `linear-gradient(to right, #0066ff 0%, #00c8ff ${percent}%, #e0e0e0 ${percent}%, #e0e0e0 100%)`;
+    }
+    
+    // 初始化所有滑块的进度条
+    document.querySelectorAll('.slider-group input[type="range"]').forEach(slider => {
+        updateSliderTrack(slider);
+    });
+
     // 监听每行字数和每页行数的变化，自动更新预览
-    charsPerLineInput.addEventListener("change", function() {
+    charsPerLineInput.addEventListener("input", function() {
+        // 更新滑块进度条
+        updateSliderTrack(this);
+        // 更新显示值
+        const valueSpan = document.getElementById('chars-per-line-value');
+        if (valueSpan) valueSpan.textContent = this.value + '字';
+        
         const previewContainer = document.querySelector(".preview-container");
         // 检查是否有内容
         if (previewContainer.children.length > 0) {
@@ -280,7 +304,13 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
     
-    linesPerPageInput.addEventListener("change", function() {
+    linesPerPageInput.addEventListener("input", function() {
+        // 更新滑块进度条
+        updateSliderTrack(this);
+        // 更新显示值
+        const valueSpan = document.getElementById('lines-per-page-value');
+        if (valueSpan) valueSpan.textContent = this.value + '行';
+        
         const previewContainer = document.querySelector(".preview-container");
         if (previewContainer.children.length > 0) {
             const firstPage = previewContainer.querySelector(".handwriting-preview");
@@ -303,7 +333,13 @@ document.addEventListener("DOMContentLoaded", function () {
     
     // 监听抖动强度的变化
     const jitterLevelInput = document.getElementById('jitter-level');
-    jitterLevelInput.addEventListener("change", function() {
+    jitterLevelInput.addEventListener("input", function() {
+        // 更新滑块进度条
+        updateSliderTrack(this);
+        // 更新显示值
+        const valueSpan = document.getElementById('jitter-level-value');
+        if (valueSpan) valueSpan.textContent = this.value;
+        
         const previewContainer = document.querySelector(".preview-container");
         if (previewContainer.children.length > 0) {
             const firstPage = previewContainer.querySelector(".handwriting-preview");
@@ -328,35 +364,42 @@ document.addEventListener("DOMContentLoaded", function () {
         const fontSizeMode = fontSizeModeSelector.value || "auto";
         const enableErrors = document.getElementById('enable-errors').value;
         
-        // 计算预览区的字体大小（模拟后端逻辑）
-        let previewFontSize;
-        const currentFontSizeMode = fontSizeModeSelector.value || "auto";
-        if (currentFontSizeMode === "auto") {
-            // 自动计算：根据每行字数
-            // 预览区宽度420px，边距20px
-            const previewWidth = 420 - 40;  // 380px
-            // 为手写体预留一些自然的边距和字间距
-            let reservedSpace;
-            if (charsPerLine <= 20) {
-                // 少字数：预留更少空间，让字更大
-                reservedSpace = 0.2;  // 预留0.2个字的空间
-            } else if (charsPerLine <= 35) {
-                // 中等字数：适中预留
-                reservedSpace = 0.5;  // 预留0.5个字的空间
-            } else {
-                // 多字数：预留较少空间，但保持可读性
-                reservedSpace = Math.max(0.2, Math.floor(charsPerLine * 0.015));  // 预留1.5%的空间
-            }
-            
-            const estimatedCharWidth = previewWidth / (charsPerLine + reservedSpace);
-            previewFontSize = Math.max(8, Math.min(estimatedCharWidth * 0.98, 24));
-        } else if (currentFontSizeMode === "small") {
-            previewFontSize = 12;  // 60pt -> 12px (1:5缩放)
-        } else if (currentFontSizeMode === "large") {
-            previewFontSize = 20;  // 100pt -> 20px
-        } else {
-            previewFontSize = 16;  // 80pt -> 16px (中等)
-        }
+        // 与生成图片/PDF使用相同的字体计算逻辑，确保所见即所得
+        // A4尺寸 (300 DPI): 2480x3508, 边距160
+        // 预览区尺寸: 420x594, 边距20
+        // 缩放比例: 420/2480 = 0.169
+        const A4_WIDTH = 2480;
+        const A4_HEIGHT = 3508;
+        const MARGIN = 160;
+        
+        // 计算字体大小（与 frontend-render.js 相同的算法）
+        const availableWidth = A4_WIDTH - MARGIN * 2;
+        const availableHeight = A4_HEIGHT - MARGIN * 2;
+        const maxFontSizeByWidth = Math.floor(availableWidth / charsPerLine * 0.95);
+        const lineHeight = Math.floor(availableHeight / linesPerPage);
+        const maxFontSizeByHeight = Math.floor(lineHeight * 0.7);
+        const a4FontSize = Math.max(20, Math.min(maxFontSizeByWidth, maxFontSizeByHeight));
+        
+        // 预览区使用更高精度的缩放，避免小数点截断
+        const PREVIEW_WIDTH = 420;  // 预览区宽度
+        const PREVIEW_HEIGHT = 594; // 预览区高度
+        const PREVIEW_MARGIN = 20;  // 预览区边距
+        
+        // 精确缩放比例
+        const widthScale = PREVIEW_WIDTH / A4_WIDTH;
+        const heightScale = PREVIEW_HEIGHT / A4_HEIGHT;
+        
+        // 使用较小的缩放比例以确保内容完全适应预览区
+        const scale = Math.min(widthScale, heightScale);
+        
+        // 预览区字体大小 = A4字体大小 * 精确缩放比例
+        const previewFontSize = a4FontSize * scale;
+        // 预览区行高
+        const previewLineHeight = lineHeight * scale;
+        
+        // 为避免小数点导致的精度问题，使用整数像素值
+        const roundedPreviewFontSize = Math.max(1, Math.round(previewFontSize));
+        const roundedPreviewLineHeight = Math.max(1, Math.round(previewLineHeight));
         
         // 按照每行字数切分文本
         const lines = [];
@@ -400,28 +443,22 @@ document.addEventListener("DOMContentLoaded", function () {
             const pageDiv = document.createElement("div");
             pageDiv.className = "handwriting-preview";
             pageDiv.setAttribute("data-page-num", `第 ${index + 1} 页`);
-            // 设置字体大小
-            pageDiv.style.fontSize = `${previewFontSize}px`;
-            // 根据每行字数设置适当的字符间距（模拟实际效果）
-            if (charsPerLine <= 20) {
-                pageDiv.style.letterSpacing = "0.2px";  // 少字数：较窄间距
-            } else if (charsPerLine <= 35) {
-                pageDiv.style.letterSpacing = "0.1px";  // 中等字数：更窄间距
-            } else {
-                pageDiv.style.letterSpacing = "0px";  // 多字数：最小间距
-            }
+            // 设置字体大小和行高（与生成一致）
+            pageDiv.style.fontSize = `${roundedPreviewFontSize}px`;
+            pageDiv.style.lineHeight = `${roundedPreviewLineHeight}px`;
+            pageDiv.style.letterSpacing = "0px";  // 与生成保持一致
             
-            // 如果有抖动效果，逐行渲染并添加随机偏移
             if (jitterLevel > 0) {
                 const pageLines = pageContent.split("\n");
                 pageLines.forEach((lineText, lineIdx) => {
                     const lineDiv = document.createElement("div");
                     lineDiv.style.position = "relative";
                     lineDiv.style.whiteSpace = "nowrap";
+                    lineDiv.style.height = `${roundedPreviewLineHeight}px`;
                     
-                    // 行级别抖动：水平和垂直偏移
-                    const lineHJitter = (Math.random() - 0.5) * jitterLevel * 1.5;  // 水平偏移
-                    const lineVJitter = (Math.random() - 0.5) * jitterLevel * 1;    // 垂直偏移
+                    // 行级别抖动：水平和垂直偏移（按精确比例缩放）
+                    const lineHJitter = (Math.random() - 0.5) * jitterLevel * 1.5 * scale;
+                    const lineVJitter = (Math.random() - 0.5) * jitterLevel * 1 * scale;
                     lineDiv.style.marginLeft = `${lineHJitter}px`;
                     lineDiv.style.marginTop = `${lineVJitter}px`;
                     
@@ -432,9 +469,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         charSpan.style.display = "inline-block";
                         charSpan.style.position = "relative";
                         
-                        // 字符级别抖动
-                        const charHJitter = (Math.random() - 0.5) * jitterLevel * 0.5;
-                        const charVJitter = (Math.random() - 0.5) * jitterLevel * 0.6;
+                        // 字符级别抖动（按精确比例缩放）
+                        const charHJitter = (Math.random() - 0.5) * jitterLevel * 0.5 * scale;
+                        const charVJitter = (Math.random() - 0.5) * jitterLevel * 0.6 * scale;
                         charSpan.style.left = `${charHJitter}px`;
                         charSpan.style.top = `${charVJitter}px`;
                         
@@ -466,30 +503,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const charsPerLine = parseInt(charsPerLineInput.value, 10) || 26;
         const linesPerPage = parseInt(linesPerPageInput.value, 10) || 20;
         
-        // 智能提示：超过推荐值
-        if (charsPerLine > 35) {
-            const confirm = window.confirm(
-                `每行${charsPerLine}字可能过多，建议20-30字。\n\n` +
-                `过多的字可能导致：\n` +
-                `1. 文字超出A4纸范围\n` +
-                `2. 打印后难以识别\n\n` +
-                `确定要继续生成吗？`
-            );
-            if (!confirm) {
-                return;
-            }
-        }
-        
-        if (linesPerPage > 28) {
-            const confirm = window.confirm(
-                `每页${linesPerPage}行可能过多，建议15-25行。\n\n` +
-                `过多的行可能导致文字超出A4纸高度。\n\n` +
-                `确定要继续生成吗？`
-            );
-            if (!confirm) {
-                return;
-            }
-        }
+        // 参数已记录，无限制弹窗
+        console.log(`排版参数: 每行${charsPerLine}字, 每页${linesPerPage}行`);
 
         // 显示开始生成的提示
         showToast("正在生成图片，请稍候...", "info", 30000);

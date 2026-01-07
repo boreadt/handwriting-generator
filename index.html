@@ -15,12 +15,17 @@
     <div class="app-container">
         <header class="app-header">
             <h1>手写体文本生成器</h1>
-            <p>输入要抄写的内容，自动生成“手写体”效果文本。</p>
+            <p>输入要抄写的内容，自动生成"手写体"效果文本。</p>
             <div class="mode-switch">
                 <button id="mode-text-btn" class="mode-btn active">文本转手写</button>
                 <button id="mode-pdf-btn" class="mode-btn">导入PDF编辑</button>
             </div>
         </header>
+
+        <!-- 顶部广告位：横幅（示例占位） -->
+        <div class="ad-slot ad-slot-banner" data-ad-slot="banner-top" id="ad-banner-top">
+            <div class="ad-placeholder">广告位：顶部横幅（示例占位）</div>
+        </div>
 
         <main class="app-main">
             <section class="input-section">
@@ -55,12 +60,18 @@
                     </div>
                     <div class="layout-row">
                         <label>每行字数：
-                            <input id="chars-per-line" type="number" min="5" max="100" value="26" />
-                            <span style="font-size: 12px; color: #666;">（推荐: 20-30字）</span>
+                            <div class="slider-group">
+                                <input type="range" id="chars-per-line" min="10" max="40" value="26" 
+                                    oninput="document.getElementById('chars-per-line-value').textContent=this.value+'字'" />
+                                <span class="slider-value" id="chars-per-line-value">26字</span>
+                            </div>
                         </label>
                         <label>每页行数：
-                            <input id="lines-per-page" type="number" min="5" max="50" value="20" />
-                            <span style="font-size: 12px; color: #666;">（推荐: 15-25行）</span>
+                            <div class="slider-group">
+                                <input type="range" id="lines-per-page" min="6" max="30" value="20" 
+                                    oninput="document.getElementById('lines-per-page-value').textContent=this.value+'行'" />
+                                <span class="slider-value" id="lines-per-page-value">20行</span>
+                            </div>
                         </label>
                     </div>
                     <div class="layout-row">
@@ -80,8 +91,11 @@
                     </div>
                     <div class="layout-row">
                         <label>抖动强度：
-                            <input id="jitter-level" type="number" min="0" max="10" value="6" style="width: 60px;" />
-                            <span style="font-size: 12px; color: #666;">0=无抖动，1-3=轻微，4-6=中等，7-10=明显</span>
+                            <div class="slider-group">
+                                <input type="range" id="jitter-level" min="0" max="10" value="6" 
+                                    oninput="document.getElementById('jitter-level-value').textContent=this.value" />
+                                <span class="slider-value" id="jitter-level-value">6</span>
+                            </div>
                         </label>
                     </div>
                 </div>
@@ -94,6 +108,11 @@
                 <!-- PDF编辑模式的导出按钮 -->
                 <button id="export-edited-pdf-button" style="display: none;">导出编辑后的PDF</button>
             </section>
+
+            <!-- 页面中部广告位：矩形/侧栏（示例占位） -->
+            <div class="ad-slot ad-slot-rect" data-ad-slot="mid-rect" id="ad-mid-rect">
+                <div class="ad-placeholder">广告位：中部矩形（示例占位）</div>
+            </div>
 
             <section class="output-section">
                 <h2>预览（A4纸张比例）</h2>
@@ -127,11 +146,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <!-- jsPDF 用于前端生成PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     </script>
     <script src="static/js/frontend-render.js"></script>
     <script src="static/js/app.js"></script>
+    <script src="static/js/ads.js"></script>
     <script src="static/js/pdf-editor.js"></script>
 </body>
 </html>

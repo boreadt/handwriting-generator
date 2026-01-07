@@ -8,7 +8,33 @@ const FrontendRender = (function() {
     const A4_HEIGHT = 3508;
     const MARGIN = 160;
     
-    // 字体大小配置
+    /**
+     * 根据每行字数和每页行数自动计算字体大小和行高
+     */
+    function calculateFontSize(charsPerLine, linesPerPage) {
+        // A4可用宽度 = 总宽度 - 左右边距
+        const availableWidth = A4_WIDTH - MARGIN * 2;
+        // A4可用高度 = 总高度 - 上下边距
+        const availableHeight = A4_HEIGHT - MARGIN * 2;
+        
+        // 根据每行字数计算字体大小（宽度限制）
+        const maxFontSizeByWidth = Math.floor(availableWidth / charsPerLine * 0.95);
+        
+        // 根据每页行数计算行高（高度限制）
+        const lineHeight = Math.floor(availableHeight / linesPerPage);
+        // 字体大小不能超过行高的70%
+        const maxFontSizeByHeight = Math.floor(lineHeight * 0.7);
+        
+        // 取两个限制的较小值
+        const fontSize = Math.min(maxFontSizeByWidth, maxFontSizeByHeight);
+        
+        return {
+            size: Math.max(20, fontSize), // 最小20px
+            lineHeight: lineHeight
+        };
+    }
+    
+    // 字体大小配置（保留作为备用）
     const FONT_SIZES = {
         small: { size: 60, lineHeight: 84 },
         medium: { size: 80, lineHeight: 112 },
@@ -158,7 +184,9 @@ const FrontendRender = (function() {
         
         // 获取字体信息
         const fontFamily = fontMap[fontKey] || 'PingFang';
-        const fontConfig = FONT_SIZES[fontSizeMode] || FONT_SIZES.medium;
+        
+        // 自动计算字体大小，确保A4纸能容纳
+        const fontConfig = calculateFontSize(charsPerLine, linesPerPage);
         
         // 等待字体加载
         await waitForFont(fontFamily);
@@ -208,7 +236,9 @@ const FrontendRender = (function() {
         
         // 获取字体信息
         const fontFamily = fontMap[fontKey] || 'PingFang';
-        const fontConfig = FONT_SIZES[fontSizeMode] || FONT_SIZES.medium;
+        
+        // 自动计算字体大小，确保A4纸能容纳
+        const fontConfig = calculateFontSize(charsPerLine, linesPerPage);
         
         // 等待字体加载
         await waitForFont(fontFamily);

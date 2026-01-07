@@ -170,6 +170,57 @@ body {
     border: 1px solid #e8ecf0;
 }
 
+/* ========== 广告位样式 ========== */
+.ad-slot {
+    background: #fff;
+    border: 1px dashed #e6eef7;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    font-size: 14px;
+    padding: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.ad-placeholder {
+    width: 100%;
+    text-align: center;
+    color: #999;
+    font-size: 13px;
+    padding: 8px 12px;
+}
+
+/* 顶部横幅：桌面上占整行，手机端收起高度 */
+.ad-slot-banner {
+    width: 100%;
+    height: 90px;
+    margin: 12px 0 20px 0;
+}
+
+/* 页面中部矩形：在 layout 中作为一个 flex 项显示，桌面显示为 300px 宽，手机端隐藏 */
+.ad-slot-rect {
+    width: 300px;
+    min-width: 300px;
+    height: 250px;
+    align-self: flex-start;
+}
+
+/* 输出底部横幅 */
+.ad-slot-footer {
+    width: 100%;
+    height: 60px;
+    margin-top: 16px;
+}
+
+/* 响应式：小屏幕下隐藏中部矩形，顶部/底部横幅高度自适应 */
+@media (max-width: 768px) {
+    .ad-slot-rect { display: none; }
+    .ad-slot-banner { height: 60px; margin: 8px 0; }
+    .ad-slot-footer { height: 50px; }
+}
+
 textarea#input-text {
     width: 100%;
     min-height: 180px;
@@ -226,6 +277,12 @@ textarea#input-text::placeholder {
     transition: all 0.3s ease;
 }
 
+/* 下拉选项滚动优化 */
+.layout-row select {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
 .layout-row input[type="number"]:focus,
 .layout-row input[type="text"]:focus,
 .layout-row select:focus {
@@ -243,19 +300,69 @@ textarea#input-text::placeholder {
     color: #888 !important;
 }
 
-#convert-button,
-#export-edited-pdf-button {
-    margin-top: 12px;
-    padding: 12px 20px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    border: none;
-    border-radius: 10px;
-    transition: all 0.3s ease;
+.slider-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
 }
 
-/* 下载按钮组 */
+.slider-group input[type="range"] {
+    flex: 1;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: #e0e0e0;
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+}
+
+.slider-group input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border: 2px solid #0066ff;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 102, 255, 0.3);
+    transition: transform 0.2s ease;
+}
+
+.slider-group input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+}
+
+/* Firefox 进度条 */
+.slider-group input[type="range"]::-moz-range-track {
+    background: #e0e0e0;
+    border-radius: 3px;
+    height: 6px;
+}
+
+.slider-group input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border: 2px solid #0066ff;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 102, 255, 0.3);
+}
+
+.slider-value {
+    min-width: 40px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #0066ff;
+    background: #f0f7ff;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+/* 按钮组样式 */
 .download-btn-group {
     display: flex;
     margin-top: 12px;
@@ -296,6 +403,14 @@ textarea#input-text::placeholder {
     background: linear-gradient(135deg, #0066ff, #0052cc);
     color: #fff;
     box-shadow: 0 4px 12px rgba(0, 102, 255, 0.25);
+    margin-top: 12px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    transition: all 0.3s ease;
 }
 
 #convert-button:hover {
@@ -307,6 +422,14 @@ textarea#input-text::placeholder {
     background: linear-gradient(135deg, #8b5cf6, #7c3aed);
     color: #fff;
     box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
+    margin-top: 12px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    transition: all 0.3s ease;
 }
 
 #export-edited-pdf-button:hover {
@@ -314,6 +437,7 @@ textarea#input-text::placeholder {
     box-shadow: 0 6px 16px rgba(139, 92, 246, 0.35);
 }
 
+/* 按钮激活状态 */
 #convert-button:active,
 #export-edited-pdf-button:active,
 .download-btn-group button:active {
@@ -571,27 +695,29 @@ textarea#input-text::placeholder {
     
     /* 预览区域 - 手机端优化 */
     .preview-container {
-        padding: 10px;
-        min-height: 380px;
+        padding: 12px;
+        min-height: 360px;
         overflow-x: auto;
-        overflow-y: visible;
+        overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
-        justify-content: center; /* 居中显示 */
+        justify-content: center;
         align-items: flex-start;
     }
     
-    /* A4预览卡片 - 按比例缩放 */
+    /* A4预览卡片 - 使用 transform 缩放保持内容比例 */
     .handwriting-preview {
-        /* 使用 calc 根据屏幕宽度计算，保持 A4 比例 (1:√2 ≈ 1:1.414) */
-        width: calc(100vw - 76px); /* 屏幕宽度减去边距 */
-        max-width: 320px; /* 最大宽度限制 */
-        min-width: 240px; /* 最小宽度 */
-        height: auto;
-        aspect-ratio: 210 / 297; /* A4 标准比例 */
-        padding: 14px;
-        font-size: 11px;
-        line-height: 1.6;
-        flex-shrink: 0;
+        /* 保持原始尺寸，用 transform 整体缩放 */
+        min-width: 420px;
+        width: 420px;
+        height: 594px;
+        padding: 20px;
+        transform: scale(0.7) !important; /* 缩放到70% */
+        transform-origin: top center;
+        margin-bottom: -178px; /* 补偿缩放后的底部空白: 594 * (1-0.7) */
+    }
+    
+    .handwriting-preview:hover {
+        transform: scale(0.7) !important; /* 手机端禁用hover缩放效果 */
     }
     
     /* PDF编辑模式 */
@@ -676,17 +802,17 @@ textarea#input-text::placeholder {
     
     /* 小屏手机预览卡片 */
     .preview-container {
-        padding: 8px;
-        min-height: 340px;
+        padding: 10px;
+        min-height: 320px;
     }
     
     .handwriting-preview {
-        width: calc(100vw - 66px);
-        max-width: 280px;
-        min-width: 200px;
-        padding: 12px;
-        font-size: 10px;
-        line-height: 1.5;
+        transform: scale(0.6) !important; /* 小屏缩放到60% */
+        margin-bottom: -238px; /* 594 * (1-0.6) */
+    }
+    
+    .handwriting-preview:hover {
+        transform: scale(0.6) !important;
     }
     
     .pdf-toolbar {
