@@ -68,24 +68,96 @@ const FrontendRender = (function() {
     /**
      * 切分文本为行和页
      */
-    function splitTextToPages(text, charsPerLine, linesPerPage) {
+    // 标点不计数的拆行辅助（保留标点在行内位置）
+    function isPunct(ch) {
+        try {
+            return /\p{P}/u.test(ch);
+        } catch (e) {
+            // 如果环境不支持 Unicode 属性，回退到常用标点集合
+            return ",.!?;:，。！？；：、（）()[]{}『』”“'\"".indexOf(ch) !== -1;
+        }
+    }
+
+    function splitParagraphByCharsIgnoringPunct(para, charsPerLine) {
+        const chunks = [];
+        let cur = '';
+        let count = 0;
+        for (const ch of para) {
+            cur += ch;
+            if (!isPunct(ch) && ch !== ' ') {
+                count += 1;
+            }
+            if (count >= charsPerLine) {
+                chunks.push(cur);
+                cur = '';
+                count = 0;
+            }
+        }
+        if (cur !== '') chunks.push(cur);
+        return chunks;
+    }
+
+    // 按像素宽度拆行（自适应，返回数组 of lines）
+    function splitParagraphByWidth(para, fontFamily, fontSize, fontWeight, availableWidth) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.font = `${fontWeight || 400} ${fontSize}px "${fontFamily}"`;
+
+        const chunks = [];
+        let cur = '';
+        let curWidth = 0;
+
+        for (const ch of para) {
+            const w = ctx.measureText(ch).width;
+            if (cur === '') {
+                cur = ch;
+                curWidth = w;
+            } else if (curWidth + w <= availableWidth) {
+                cur += ch;
+                curWidth += w;
+            } else {
+                chunks.push(cur);
+                cur = ch;
+                curWidth = w;
+            }
+        }
+        if (cur !== '') chunks.push(cur);
+        return chunks;
+    }
+
+    function splitTextToPages(text, charsPerLine, linesPerPage, options = {}) {
         const lines = [];
         const paragraphs = text.split("\n");
-        
+        const fontFamily = options.fontFamily || 'PingFang';
+        const fontSize = options.fontSize || 80;
+        const fontWeight = options.fontWeight || 400;
+        const availableWidth = A4_WIDTH - MARGIN * 2;
+
         for (const para of paragraphs) {
             if (!para.trim()) {
                 lines.push("");
                 continue;
             }
-            
-            let remainText = para.trim();
-            while (remainText.length > 0) {
-                const chunk = remainText.substring(0, charsPerLine);
-                lines.push(chunk);
-                remainText = remainText.substring(charsPerLine);
+
+            const trimmed = para.trim();
+            if (options.adaptiveWrap) {
+                const chunks = splitParagraphByWidth(trimmed, fontFamily, fontSize, fontWeight, availableWidth);
+                for (const c of chunks) lines.push(c);
+            } else {
+                const chunks = splitParagraphByCharsIgnoringPunct(trimmed, charsPerLine);
+                for (const c of chunks) lines.push(c);
             }
         }
-        
+
+        // 分页
+        const pages = [];
+        for (let i = 0; i < lines.length; i += linesPerPage) {
+            pages.push(lines.slice(i, i + linesPerPage));
+        }
+
+        if (pages.length === 0) pages.push([""]);
+        return pages;
+    }        
         if (lines.length === 0) {
             lines.push("");
         }
@@ -179,20 +251,21 @@ const FrontendRender = (function() {
             charsPerLine = 26,
             linesPerPage = 20,
             fontSizeMode = 'medium',
-            jitterLevel = 6
+            jitterLevel = 6,
+            adaptiveWrap = true
         } = options;
         
         // 获取字体信息
         const fontFamily = fontMap[fontKey] || 'PingFang';
         
-        // 自动计算字体大小，确保A4纸能容纳
+        // 自动计算字体大小，确保A4纸能容纳（charsPerLine 仅作为提示）
         const fontConfig = calculateFontSize(charsPerLine, linesPerPage);
         
         // 等待字体加载
         await waitForFont(fontFamily);
         
-        // 分页
-        const pages = splitTextToPages(text, charsPerLine, linesPerPage);
+        // 分页（支持 adaptiveWrap）
+        const pages = splitTextToPages(text, charsPerLine, linesPerPage, { fontFamily, fontSize: fontConfig.size, fontWeight, adaptiveWrap });
         
         // 生成每页图片
         const blobs = [];
@@ -204,7 +277,8 @@ const FrontendRender = (function() {
                 fontSize: fontConfig.size,
                 lineHeight: fontConfig.lineHeight,
                 fontWeight,
-                jitterLevel
+                jitterLevel,
+                adaptiveWrap
             });
             
             // 转换为 Blob

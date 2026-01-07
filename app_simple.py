@@ -73,23 +73,45 @@ def render_image():
             print(f"字体加载失败: {e}, 使用默认字体")
             font = ImageFont.load_default()
         
-        # 简单绘制文字（每行26个字）
+        # 简单绘制文字（每行26个字，计数忽略标点）
         chars_per_line = int(data.get("chars_per_line", 26))
         y = margin
         line_height = 56
         
-        print(f"开始绘制文字，每行{chars_per_line}字")
+        print(f"开始绘制文字，每行{chars_per_line}字（标点不计数）")
         
-        # 按每行字数切分
+        # 按每行字数切分（忽略标点计数）
+        import unicodedata
+        def is_punctuation(ch: str) -> bool:
+            if not ch:
+                return False
+            return unicodedata.category(ch).startswith("P")
+
+        def split_para(para: str, chars_per_line: int):
+            if para is None or para == "":
+                return [""]
+            chunks = []
+            cur = ""
+            count = 0
+            for ch in para:
+                cur += ch
+                if not is_punctuation(ch) and not ch.isspace():
+                    count += 1
+                if count >= chars_per_line:
+                    chunks.append(cur)
+                    cur = ""
+                    count = 0
+            if cur:
+                chunks.append(cur)
+            return chunks
+
         lines = []
         for para in text.split("\n"):
             if not para.strip():
                 lines.append("")
                 continue
             para = para.strip()
-            while para:
-                lines.append(para[:chars_per_line])
-                para = para[chars_per_line:]
+            lines.extend(split_para(para, chars_per_line))
         
         print(f"总共{len(lines)}行")
         

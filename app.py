@@ -31,6 +31,43 @@ def get_font_path(font_key):
     return os.path.join(FONT_DIR, font_info["file"])
 
 
+# ---- 标点忽略的拆行函数 ----
+import unicodedata
+
+def is_punctuation(ch: str) -> bool:
+    """判断字符是否为标点符号（依据 Unicode 类别）。"""
+    if not ch:
+        return False
+    return unicodedata.category(ch).startswith("P")
+
+
+def split_paragraph_by_chars_ignoring_punct(para: str, chars_per_line: int):
+    """将段落切分为多行，统计字数时忽略标点和空格，但保留这些字符在行中的位置。
+
+    例如：当 chars_per_line=5，遇到文本 "我爱你，世界！" 中的标点不会计入 5 个字的统计中。
+    """
+    if para is None or para == "":
+        return [""]
+
+    chunks = []
+    cur = ""
+    count = 0
+    for ch in para:
+        cur += ch
+        # 忽略标点与空白字符的计数
+        if not is_punctuation(ch) and not ch.isspace():
+            count += 1
+        if count >= chars_per_line:
+            chunks.append(cur)
+            cur = ""
+            count = 0
+    if cur:
+        chunks.append(cur)
+    return chunks
+
+# ---- End helpers ----
+
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -75,9 +112,14 @@ def render_image():
         font_size_mode = data.get("font_size_mode", "medium")  # 默认中等字体
         enable_errors = data.get("enable_errors", False)  # 默认关闭错误功能
         jitter_level = int(data.get("jitter_level", 0))  # 抖动强度，默认0（无抖动）
+        adaptive_wrap = bool(data.get("adaptive_wrap", True))  # 是否启用按像素自适应换行并对齐
         
         # 限制抖动强度范围
         jitter_level = max(0, min(10, jitter_level))
+
+        # 可选：对 chars_per_line 作为建议进行限制（但不强制）
+        chars_per_line = max(5, min(chars_per_line, 200))
+
         
         # 参数验证
         if chars_per_line < 1 or chars_per_line > 100:
@@ -133,16 +175,14 @@ def render_image():
             print("使用默认字体")
             font = ImageFont.load_default()
         
-        # 切分文本为行
+        # 切分文本为行（忽略标点计数）
         logical_lines = []
         for para in text.split("\n"):
             if not para.strip():
                 logical_lines.append("")
                 continue
             para = para.strip()
-            while para:
-                logical_lines.append(para[:chars_per_line])
-                para = para[chars_per_line:]
+            logical_lines.extend(split_paragraph_by_chars_ignoring_punct(para, chars_per_line))
         
         if not logical_lines:
             logical_lines = [""]
@@ -230,8 +270,27 @@ def render_image():
                             processed_chars[i] = wrong_char
                             error_positions.append((i, original_char, wrong_char))
                 
-                # 绘制字符
+                # 绘制字符（支持自适应对齐）
                 char_coords = []  # 记录每个字符的坐标
+
+                if adaptive_wrap:
+                    # 先测量每个字符宽度
+                    char_widths = []
+                    for ch in processed_chars:
+                        try:
+                            bbox = draw.textbbox((0,0), ch, font=font)
+                            w = bbox[2] - bbox[0]
+                        except AttributeError:
+                            w, _ = draw.textsize(ch, font=font)
+                        char_widths.append(w)
+
+                    content_width = sum(char_widths)
+                    available_width = width - margin * 2
+                    gaps = max(1, len(char_widths) - 1)
+                    extra_per_gap = (available_width - content_width) / gaps if content_width < available_width else 0
+                else:
+                    extra_per_gap = 0
+
                 for ch_idx, ch in enumerate(processed_chars):
                     # 字符水平抖动（根据抖动强度）
                     jitter_x = random.randint(-char_h_range, char_h_range) if char_h_range > 0 else 0
@@ -275,6 +334,19 @@ def render_image():
                                     fill=text_color, 
                                     font=font
                                 )
+
+                    # 在自适应模式下，调整 x 增量以分配额外间距，从而实现两端对齐
+                    try:
+                        bbox = draw.textbbox((0, 0), ch, font=font)
+                        w = bbox[2] - bbox[0]
+                    except AttributeError:
+                        w, _ = draw.textsize(ch, font=font)
+
+                    # 记录字符坐标用于错误纠正
+                    char_coords.append((x + jitter_x, base_y + jitter_y))
+
+                    # 绘制字符后更新 x：在 adaptive 模式下额外加上分配的间距
+                    x += int(w + extra_per_gap)  # 转为 int 避免浮点累积误差
                     else:
                         if stroke_width > 0:
                             draw.text(
@@ -488,16 +560,14 @@ def render_pdf():
         except:
             font = ImageFont.load_default()
         
-        # 切分文本
+        # 切分文本（忽略标点计数）
         logical_lines = []
         for para in text.split("\n"):
             if not para.strip():
                 logical_lines.append("")
                 continue
             para = para.strip()
-            while para:
-                logical_lines.append(para[:chars_per_line])
-                para = para[chars_per_line:]
+            logical_lines.extend(split_paragraph_by_chars_ignoring_punct(para, chars_per_line))
         
         if not logical_lines:
             logical_lines = [""]

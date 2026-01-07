@@ -405,19 +405,32 @@ document.addEventListener("DOMContentLoaded", function () {
         const lines = [];
         const paragraphs = text.split("\n");
         
+        // 使用与渲染一致的拆行逻辑：标点不计数
+        function isPunct(ch) {
+            try { return /\p{P}/u.test(ch); } catch (e) { return ",.!?;:，。！？；：、（）()[]{}『』”“'\"".indexOf(ch) !== -1; }
+        }
+        function splitParagraphByCharsIgnoringPunct(para, charsPerLine) {
+            const chunks = [];
+            let cur = '';
+            let count = 0;
+            for (const ch of para) {
+                cur += ch;
+                if (!isPunct(ch) && ch !== ' ') count += 1;
+                if (count >= charsPerLine) { chunks.push(cur); cur = ''; count = 0; }
+            }
+            if (cur !== '') chunks.push(cur);
+            return chunks;
+        }
+
         for (const para of paragraphs) {
             if (!para.trim()) {
                 lines.push("");  // 保留空行
                 continue;
             }
-            
-            let remainText = para.trim();
-            // 严格按照设置的每行字数切分，不再使用额外的缩放因子
-            while (remainText.length > 0) {
-                const chunk = remainText.substring(0, charsPerLine);
-                lines.push(chunk);
-                remainText = remainText.substring(charsPerLine);
-            }
+
+            const trimmed = para.trim();
+            const chunks = splitParagraphByCharsIgnoringPunct(trimmed, charsPerLine);
+            for (const c of chunks) lines.push(c);
         }
         
         // 按每页行数分页
@@ -438,7 +451,9 @@ document.addEventListener("DOMContentLoaded", function () {
         
         // 获取抖动强度
         const jitterLevel = parseInt(document.getElementById('jitter-level').value, 10) || 0;
-        
+        const adaptiveWrapCheckbox = document.getElementById('adaptive-wrap');
+        const adaptiveWrapEnabled = adaptiveWrapCheckbox ? adaptiveWrapCheckbox.checked : true;
+
         pages.forEach((pageContent, index) => {
             const pageDiv = document.createElement("div");
             pageDiv.className = "handwriting-preview";
@@ -450,6 +465,116 @@ document.addEventListener("DOMContentLoaded", function () {
             
             if (jitterLevel > 0) {
                 const pageLines = pageContent.split("\n");
+                pageLines.forEach((lineText, lineIdx) => {
+                    const lineDiv = document.createElement("div");
+                    lineDiv.style.position = "relative";
+                    lineDiv.style.whiteSpace = "nowrap";
+                    lineDiv.style.height = `${roundedPreviewLineHeight}px`;
+
+                    // 行级别抖动：水平和垂直偏移（按精确比例缩放）
+                    const lineHJitter = (Math.random() - 0.5) * jitterLevel * 1.5 * scale;
+                    const lineVJitter = (Math.random() - 0.5) * jitterLevel * 1 * scale;
+                    lineDiv.style.marginLeft = `${lineHJitter}px`;
+                    lineDiv.style.marginTop = `${lineVJitter}px`;
+
+                    // 逐字符渲染（添加字符级别抖动）
+                    if (!adaptiveWrapEnabled) {
+                        for (let i = 0; i < lineText.length; i++) {
+                            const charSpan = document.createElement("span");
+                            charSpan.textContent = lineText[i];
+                            charSpan.style.display = "inline-block";
+                            charSpan.style.position = "relative";
+                            
+                            // 字符级别抖动（按精确比例缩放）
+                            const charHJitter = (Math.random() - 0.5) * jitterLevel * 0.5 * scale;
+                            const charVJitter = (Math.random() - 0.5) * jitterLevel * 0.6 * scale;
+                            charSpan.style.left = `${charHJitter}px`;
+                            charSpan.style.top = `${charVJitter}px`;
+                            
+                            lineDiv.appendChild(charSpan);
+                        }
+                    } else {
+                        // adaptive mode: 在DOM里大致实现对齐，通过均匀分配每个字符的右外边距（margin-right）来模拟对齐
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        const cssFamily = (fontMap[fontSelector.value] || 'PingFang');
+                        ctx.font = `${fontWeightSelector.value || 400} ${roundedPreviewFontSize}px "${cssFamily}"`;
+
+                        // 计算每个字符宽度
+                        const widths = [];
+                        let contentWidth = 0;
+                        for (let i = 0; i < lineText.length; i++) {
+                            const w = ctx.measureText(lineText[i]).width;
+                            widths.push(w);
+                            contentWidth += w;
+                        }
+
+                        const previewAvailableWidth = (PREVIEW_WIDTH - PREVIEW_MARGIN * 2);
+                        const gaps = Math.max(1, lineText.length - 1);
+                        const remaining = previewAvailableWidth - contentWidth;
+                        const extraPerGap = remaining > 0 ? remaining / gaps : 0;
+
+                        for (let i = 0; i < lineText.length; i++) {
+                            const charSpan = document.createElement('span');
+                            charSpan.textContent = lineText[i];
+                            charSpan.style.display = 'inline-block';
+                            charSpan.style.position = 'relative';
+                            charSpan.style.marginRight = `${extraPerGap}px`;
+
+                            // 带抖动
+                            const charHJitter = (Math.random() - 0.5) * jitterLevel * 0.5 * scale;
+                            const charVJitter = (Math.random() - 0.5) * jitterLevel * 0.6 * scale;
+                            charSpan.style.left = `${charHJitter}px`;
+                            charSpan.style.top = `${charVJitter}px`;
+
+                            lineDiv.appendChild(charSpan);
+                        }
+                    }
+
+                    pageDiv.appendChild(lineDiv);
+                });
+            } else {
+                // 无抖动，直接显示文本
+                if (!adaptiveWrapEnabled) {
+                    pageDiv.textContent = pageContent;
+                } else {
+                    // adaptive mode without jitter: 分字符渲染并尝试对齐（与 above 同逻辑，但无抖动）
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const cssFamily = (fontMap[fontSelector.value] || 'PingFang');
+                    ctx.font = `${fontWeightSelector.value || 400} ${roundedPreviewFontSize}px "${cssFamily}"`;
+
+                    const pageLines = pageContent.split('\n');
+                    pageLines.forEach(lineText => {
+                        const lineDiv = document.createElement('div');
+                        lineDiv.style.whiteSpace = 'nowrap';
+                        lineDiv.style.height = `${roundedPreviewLineHeight}px`;
+
+                        let contentWidth = 0;
+                        for (let i = 0; i < lineText.length; i++) {
+                            const w = ctx.measureText(lineText[i]).width;
+                            contentWidth += w;
+                        }
+                        const previewAvailableWidth = (PREVIEW_WIDTH - PREVIEW_MARGIN * 2);
+                        const gaps = Math.max(1, lineText.length - 1);
+                        const remaining = previewAvailableWidth - contentWidth;
+                        const extraPerGap = remaining > 0 ? remaining / gaps : 0;
+
+                        for (let i = 0; i < lineText.length; i++) {
+                            const charSpan = document.createElement('span');
+                            charSpan.textContent = lineText[i];
+                            charSpan.style.display = 'inline-block';
+                            charSpan.style.marginRight = `${extraPerGap}px`;
+                            lineDiv.appendChild(charSpan);
+                        }
+
+                        pageDiv.appendChild(lineDiv);
+                    });
+                }
+            }
+
+            previewContainer.appendChild(pageDiv);
+        });                const pageLines = pageContent.split("\n");
                 pageLines.forEach((lineText, lineIdx) => {
                     const lineDiv = document.createElement("div");
                     lineDiv.style.position = "relative";
@@ -544,6 +669,32 @@ document.addEventListener("DOMContentLoaded", function () {
     // PDF下载按钮
     const downloadPdfButton = document.getElementById("download-pdf-button");
     downloadPdfButton.addEventListener("click", downloadPdf);
+
+    // ===== 测试模式：如果 URL 包含 ?test=1，将自动填充示例文本并渲染预览 =====
+    (function() {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('test') === '1') {
+                const sample = [
+                    '第一行：这是用于测试的示例文本，包含大量标点符号，看看标点是否被忽略，不影响字数对齐。',
+                    '第二行：标点多的行，请注意：，。！？；：、（）——“”‘’等等。',
+                    '第三行：英文标点也检测，如 commas, periods, parentheses ( ) and question marks?',
+                    '第四行：短句，测试对齐。',
+                    '第五行：标点密集：。，、；：！？。，、；：！？。，、；：！？'
+                ].join('\n');
+
+                input.value = sample;
+                // 等待少许时间以确保字体加载与 UI 准备就绪
+                setTimeout(() => {
+                    convertText();
+                    showToast('测试模式：示例文本已自动填充并渲染预览', 'info', 4000);
+                }, 300);
+            }
+        } catch (e) {
+            console.warn('测试模式初始化失败：', e);
+        }
+    })();
+
     
     async function downloadPdf() {
         const text = input.value.trim();
